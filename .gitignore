@@ -1,0 +1,7 @@
+makesolink.sh
+shared
+*.so
+libbson-1.0.so.0
+libbson-1.0.so.0.0.0
+libmongoc-1.0.so.0
+libmongoc-1.0.so.0.0.0
