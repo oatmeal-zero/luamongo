@@ -1,6 +1,6 @@
---local json = require "json"
 local driver = require "mongo.driver"
-local empty_table = {}
+local bson = require "mongo.bson"
+local empty_bson = bson.encode({})
 local mongo = {}
 local mongo_client = {}
 local mongo_db = {}
@@ -84,26 +84,26 @@ end
 
 ------------------------Basic Operations------------------------
 function mongo_collection:count(query)
-    return driver.count(self.__collection, query or empty_table)
+    return driver.count(self.__collection, query and bson.encode(query) or empty_bson)
 end
 
 function mongo_collection:insert(doc)
-    return driver.insert(self.__collection, doc)
+    return driver.insert(self.__collection, bson.encode(doc))
 end
 
 function mongo_collection:delete(query)
-    return driver.delete(self.__collection, query)
+    return driver.delete(self.__collection, bson.encode(query))
 end
 
 function mongo_collection:update(query, doc)
-    return driver.update(self.__collection, query, doc)
+    return driver.update(self.__collection, bson.encode(query), bson.encode(doc))
 end
 
 function mongo_collection:find(query, fields)
     local cursor = {
         __collection = self.__collection,
-        __query = query or empty_table,
-        __fields = fields,
+        __query = query and bson.encode(query) or empty_bson,
+        __fields = fields and bson.encode(fields),
         __sortquery = nil,
         __cursor = nil,
         __skip = 0,
@@ -114,7 +114,9 @@ function mongo_collection:find(query, fields)
 end
 
 function mongo_collection:findOne(query, fields)
-    local cursor = driver.find(self.__collection, query or empty_table, 0, 1, fields)
+    local cursor = driver.find(self.__collection, 
+            query and bson.encode(query) or empty_bson, 
+            0, 1, fields and bson.encode(fields))
     local doc = driver.next(cursor)
     driver.kill(cursor)
     return doc
@@ -129,10 +131,18 @@ end
 --@upsert   boolean
 --@new      boolean
 function mongo_collection:findAndModify(doc)
-    assert(doc.query)
-    assert(doc.update or doc.remove)
-    return driver.findAndModify(self.__collection, doc.query, doc.sort, 
-            doc.update, doc.fields, doc.remove, doc.upsert, doc.new)
+    local query  = doc.query
+    local sort   = doc.sort
+    local update = doc.update
+    local fields = doc.fields
+    assert(query)
+    assert(update or remove)
+    return driver.findAndModify(self.__collection, 
+            bson.encode(query), 
+            sort and bson.encode(sort), 
+            update and bson.encode(update), 
+            fields and bson.encode(fields), 
+            doc.remove, doc.upsert, doc.new)
 end
 
 function mongo_cursor:hasNext()
@@ -163,8 +173,9 @@ function mongo_cursor:limit(amount)
     return self
 end
 
-function mongo_cursor:sort(sort)
-    self.__sortquery = {["$query"] = self.__query, ["$orderby"] = sort}
+function mongo_cursor:sort(...)
+    self.__sortquery = bson.encode({["$query"] = self.__query, 
+            ["$orderby"] = bson.encode_order(...)})
     return self
 end
 

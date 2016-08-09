@@ -13,6 +13,11 @@ typedef struct
     lua_State *L;
 } bson_lua_state_t;
 
+typedef struct
+{
+    bson_t *bson;
+} bson_wrap_t;
+
 /*
  * Forward declarations.
  */
@@ -379,3 +384,84 @@ table_as_bson(lua_State *L, int index) {
     }
     return _table_as_bson(L, index, false);
 }
+
+bson_t *
+array_as_bson(lua_State *L, int num) {
+    bson_t *bson;
+    bson = bson_new();
+    int i;
+    for (i=0; i<num; i+=2) {
+        size_t sz;
+        const char * key = lua_tolstring(L, i+1, &sz);
+        if (key == NULL) {
+            luaL_error(L, "Argument %d need a string", i+1);
+        }
+        lua_pushvalue(L, i+2);
+        _bson_append_val(bson, L, key, sz);
+        lua_pop(L,1);
+    }
+}
+
+/*
+ * 从userdata中获取bson指针
+ */
+const bson_t *
+userdata_as_bson(lua_State *L, int index) {
+    if (!lua_isuserdata(L, index)) return NULL;
+    bson_wrap_t *ud = (bson_wrap_t*)lua_touserdata(L, index);
+    return ud->bson;
+}
+
+static int
+bson_gc(lua_State *L) {
+    bson_wrap_t *ud = (bson_wrap_t*)lua_touserdata(L, 1);
+    bson_t *bson = ud->bson;
+    bson_destroy(bson);
+}
+
+static void
+bson_meta(lua_State *L) {
+    if (luaL_newmetatable(L, "bson")) {
+        lua_pushcfunction(L, bson_gc);
+        lua_setfield(L, -2, "__gc");
+    }
+    lua_setmetatable(L, -2);
+}
+
+static int
+op_encode(lua_State *L) {
+    bson_t *bson = table_as_bson(L, -1);
+    bson_wrap_t * ud = (bson_wrap_t*)lua_newuserdata(L, sizeof(bson_wrap_t));
+    ud->bson = bson;
+    bson_meta(L);
+    return 1;
+}
+
+static int
+op_encode_order(lua_State *L) {
+    int n = lua_gettop(L);
+    if (n%2 != 0) {
+        luaL_error(L, "Invalid ordered dict");
+    }
+
+    bson_t *bson = array_as_bson(L, n);
+    lua_settop(L,1);
+    bson_wrap_t * ud = (bson_wrap_t*)lua_newuserdata(L, sizeof(bson_wrap_t));
+    ud->bson = bson;
+    bson_meta(L);
+    return 1;
+}
+
+int
+luaopen_mongo_bson(lua_State *L) {
+    luaL_checkversion(L);
+    luaL_Reg l[] ={
+        { "encode", op_encode },
+        { "encode_order", op_encode_order },
+        { NULL,     NULL },
+    };
+
+    luaL_newlib(L,l);
+    return 1;
+}
+

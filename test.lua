@@ -9,9 +9,10 @@ print("collection:", collection)
 local collection2 = db.playerset
 print("collection2:", collection2)
 --注意：json中是使用双引号的!!
-local count = db.playerset:count()
-print("count:", count)
 local count = db.playerset:count({_id = 2048})
+print("count:", count)
+collectgarbage("collect")
+local count = db.playerset:count()
 print("count:", count)
 
 local dbt = client.test
@@ -35,7 +36,8 @@ end
 
 --local cursor = db.cheat:find():skip(2):limit(2):sort('{"score":-1}')
 --local cursor = db.cheat:find({playerId = 2048}):sort({score = 1})
-local cursor = db.cheat:find({raceMode = 2}):sort({playerId = 1, score = 1})
+--local cursor = db.cheat:find({raceMode = 2}):sort({playerId = 1, score = 1})
+local cursor = db.cheat:find({raceMode = 2}):sort("playerId", 1, "score", 1)
 while cursor:hasNext() do
     local doc = cursor:next()
     printtale(doc)
