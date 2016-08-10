@@ -330,6 +330,13 @@ _bson_append_val(bson_t *bson, lua_State *L, const char *key, int len) {
             bson_destroy(val);
             break;
             }
+        case LUA_TUSERDATA:
+            {
+                printf("userdata->%s %d\n", key, len);
+                bson_wrap_t *ud = (bson_wrap_t*)luaL_checkudata(L, -1, "bson");
+                bson_append_document(bson, key, len, ud->bson);
+                break;
+            }
     }
 }
 
@@ -400,6 +407,7 @@ array_as_bson(lua_State *L, int num) {
         _bson_append_val(bson, L, key, sz);
         lua_pop(L,1);
     }
+    return bson;
 }
 
 /*
@@ -408,14 +416,15 @@ array_as_bson(lua_State *L, int num) {
 const bson_t *
 userdata_as_bson(lua_State *L, int index) {
     if (!lua_isuserdata(L, index)) return NULL;
-    bson_wrap_t *ud = (bson_wrap_t*)lua_touserdata(L, index);
+    bson_wrap_t *ud = (bson_wrap_t*)luaL_checkudata(L, index, "bson");
     return ud->bson;
 }
 
 static int
 bson_gc(lua_State *L) {
-    bson_wrap_t *ud = (bson_wrap_t*)lua_touserdata(L, 1);
+    bson_wrap_t *ud = (bson_wrap_t*)luaL_checkudata(L, 1, "bson");
     bson_t *bson = ud->bson;
+    printf("gc -> ud:%p bson:%p\n", ud, bson);
     bson_destroy(bson);
 }
 
@@ -432,6 +441,7 @@ static int
 op_encode(lua_State *L) {
     bson_t *bson = table_as_bson(L, -1);
     bson_wrap_t * ud = (bson_wrap_t*)lua_newuserdata(L, sizeof(bson_wrap_t));
+    printf("op_encode-> ud:%p bson:%p\n", ud, bson);
     ud->bson = bson;
     bson_meta(L);
     return 1;
@@ -447,6 +457,7 @@ op_encode_order(lua_State *L) {
     bson_t *bson = array_as_bson(L, n);
     lua_settop(L,1);
     bson_wrap_t * ud = (bson_wrap_t*)lua_newuserdata(L, sizeof(bson_wrap_t));
+    printf("op_encode_order-> ud:%p bson:%p\n", ud, bson);
     ud->bson = bson;
     bson_meta(L);
     return 1;

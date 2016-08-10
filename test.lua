@@ -36,8 +36,8 @@ end
 
 --local cursor = db.cheat:find():skip(2):limit(2):sort('{"score":-1}')
 --local cursor = db.cheat:find({playerId = 2048}):sort({score = 1})
---local cursor = db.cheat:find({raceMode = 2}):sort({playerId = 1, score = 1})
-local cursor = db.cheat:find({raceMode = 2}):sort("playerId", 1, "score", 1)
+local cursor = db.cheat:find({raceMode = 2}):sort("score", 1, "playerId", 1)
+--local cursor = db.cheat:find({raceMode = 2}):sort("playerId", 1, "score", 1)
 while cursor:hasNext() do
     local doc = cursor:next()
     printtale(doc)
