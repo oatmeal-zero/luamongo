@@ -118,15 +118,14 @@ function mongo_collection:findOne(query, fields)
             query and bson.encode(query) or empty_bson, 
             0, 1, fields and bson.encode(fields))
     local doc = driver.next(cursor)
-    driver.kill(cursor)
     return doc
 end
 
 --findAndModify(query, sort, update, fields, remove, upsert, new)
---@query    json
---@sort     json
---@update   json
---@fields   json
+--@query    table
+--@sort     table
+--@update   table 
+--@fields   table
 --@remove   boolean
 --@upsert   boolean
 --@new      boolean
@@ -154,7 +153,6 @@ function mongo_cursor:hasNext()
         self.__document = doc
         return true
     end
-    driver.kill(self.__cursor)
     return false
 end
 

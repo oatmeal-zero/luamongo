@@ -40,16 +40,17 @@ local cursor = db.cheat:find({raceMode = 2}):sort("score", 1, "playerId", 1)
 --local cursor = db.cheat:find({raceMode = 2}):sort("playerId", 1, "score", 1)
 while cursor:hasNext() do
     local doc = cursor:next()
-    printtale(doc)
+    --printtale(doc)
 end
 print("--------------------findOne-----------------------------")
 local doc = db.cheat:findOne({mapId= 1, playerId= 18254, })
-printtale(doc)
+--printtale(doc)
+collectgarbage("collect")
 
 dbt.testcoll:insert({pkey=1111,double= 3.1415926, utf8= "你好", document={key1= 123, key2= "abc"},array={111,222,333},bool=false,bool2=true,int32=12345678, int64=34359738368,date_time=0,timestamp=0})
 print("-------------------------------------------------")
 local doc = dbt.testcoll:findOne({pkey = 1111})
-printtale(doc)
+--printtale(doc)
 
 print("-------------------findAndModify----------------------")
 local dbg = client.global
@@ -57,6 +58,6 @@ local doc = dbg.counters:findAndModify({query = {_id = "testid"},
         update = {["$inc"] = {seq = 1}},
         upsert = true,
         new = true})
-printtale(doc)
+--printtale(doc)
 local seq = doc.value.seq
 print(type(seq), seq)

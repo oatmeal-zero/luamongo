@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include <string.h>
 
+typedef struct
+{
+    mongoc_cursor_t *cursor;
+} mongoc_cursor_wrap_t;
+
 extern void 
 bson_as_table(lua_State *L, const bson_t *bson);
 bson_t *
@@ -122,6 +127,23 @@ op_update(lua_State *L) {
 }
 
 static int
+cursor_gc(lua_State *L) {
+    mongoc_cursor_wrap_t *ud = (mongoc_cursor_wrap_t*)luaL_checkudata(L, 1, "cursor");
+    mongoc_cursor_t *cursor = ud->cursor;
+    mongoc_cursor_destroy (cursor);
+    return 0;
+}
+
+static void
+cursor_meta(lua_State *L) {
+    if (luaL_newmetatable(L, "cursor")) {
+        lua_pushcfunction(L, cursor_gc);
+        lua_setfield(L, -2, "__gc");
+    }
+    lua_setmetatable(L, -2);
+}
+
+static int
 op_find(lua_State *L) {
     mongoc_cursor_t *cursor;
     bson_error_t error;
@@ -141,7 +163,9 @@ op_find(lua_State *L) {
     fields = userdata_as_bson(L, 5);
 
     cursor = mongoc_collection_find (collection, MONGOC_QUERY_NONE, skip, limit, 0, query, fields, NULL);
-    lua_pushlightuserdata(L, cursor);
+    mongoc_cursor_wrap_t * ud = (mongoc_cursor_wrap_t*)lua_newuserdata(L, sizeof(mongoc_cursor_wrap_t));
+    ud->cursor = cursor;
+    cursor_meta(L);
     return 1;
 }
 
@@ -150,7 +174,8 @@ op_next(lua_State *L) {
     mongoc_cursor_t *cursor;
     const bson_t *doc;
 
-    cursor = lua_touserdata(L, 1);
+    mongoc_cursor_wrap_t *ud = (mongoc_cursor_wrap_t*)luaL_checkudata(L, 1, "cursor");
+    cursor = ud->cursor;
     if (!mongoc_cursor_next (cursor, &doc)) {
         return 0;
     }
@@ -159,6 +184,7 @@ op_next(lua_State *L) {
     return 1;
 }
 
+/*
 static int
 op_kill(lua_State *L) {
     mongoc_cursor_t *cursor;
@@ -166,6 +192,7 @@ op_kill(lua_State *L) {
     mongoc_cursor_destroy (cursor);
     return 0;
 }
+*/
 
 static int
 op_find_and_modify(lua_State *L) {
@@ -215,7 +242,7 @@ luaopen_mongo_driver(lua_State *L) {
         { "update", op_update },
         { "find",   op_find },
         { "next",   op_next },
-        { "kill",   op_kill },
+        //{ "kill",   op_kill },
         { "findAndModify",   op_find_and_modify },
         { NULL,     NULL },
     };
