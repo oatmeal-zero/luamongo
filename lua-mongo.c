@@ -184,16 +184,6 @@ op_next(lua_State *L) {
     return 1;
 }
 
-/*
-static int
-op_kill(lua_State *L) {
-    mongoc_cursor_t *cursor;
-    cursor = lua_touserdata(L, 1);
-    mongoc_cursor_destroy (cursor);
-    return 0;
-}
-*/
-
 static int
 op_find_and_modify(lua_State *L) {
     mongoc_collection_t *collection;
@@ -229,6 +219,21 @@ op_find_and_modify(lua_State *L) {
     return 1;
 }
 
+static int
+op_split(lua_State *L) {
+    // format: host:port
+    const char* ipaddr = luaL_checkstring(L, 1);
+    char *ptr = strchr(ipaddr, ':');
+    if (ptr != NULL) {
+        lua_pushlstring(L, ipaddr, ptr - ipaddr);
+        lua_pushinteger(L, atoi(ptr+1));
+        return 2;
+    } else {
+        lua_pushstring(L, ipaddr);
+        return 1;
+    }
+}
+
 int
 luaopen_mongo_driver(lua_State *L) {
     luaL_checkversion(L);
@@ -242,7 +247,7 @@ luaopen_mongo_driver(lua_State *L) {
         { "update", op_update },
         { "find",   op_find },
         { "next",   op_next },
-        //{ "kill",   op_kill },
+        { "split",  op_split },
         { "findAndModify",   op_find_and_modify },
         { NULL,     NULL },
     };

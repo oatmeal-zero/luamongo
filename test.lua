@@ -1,4 +1,28 @@
 local mongo = require "mongo"
+local handler = require "handler"
+
+function printtale(t)
+    print("==>>", t, "<<==")
+    for k,v in pairs(t) do
+        print(type(k),k,v)
+        if type(v) == "table" then
+            printtale(v)
+        end
+    end
+    print("-------", t, "end.-------")
+end
+
+
+handler.init("192.168.1.45")
+local ret = handler.getRealInfo(2048)
+print("------------------------------")
+printtale(ret)
+local ret = handler.get_rewards(531)
+print("------------------------------")
+printtale(ret)
+local ret = Handler.get_reward_car(12345)
+print("------------------------------")
+print(ret)
 
 local client = mongo.client({host = "192.168.1.45"})
 print("client:", client)
@@ -22,17 +46,6 @@ local dbt = client.test
 --dbt.testcoll:insert('{"name": "lwx", "passwd": "lwx123456"}')
 --dbt.testcoll:update('{"name": "lwx"}', '{"$set": {"passwd2": 123}}')
 --dbt.testcoll:delete('{"name": "lwx"}')
-
-function printtale(t)
-    print("==>>", t, "<<==")
-    for k,v in pairs(t) do
-        print(type(k),k,v)
-        if type(v) == "table" then
-            printtale(v)
-        end
-    end
-    print("-------", t, "end.-------")
-end
 
 --local cursor = db.cheat:find():skip(2):limit(2):sort('{"score":-1}')
 --local cursor = db.cheat:find({playerId = 2048}):sort({score = 1})
@@ -61,3 +74,5 @@ local doc = dbg.counters:findAndModify({query = {_id = "testid"},
 --printtale(doc)
 local seq = doc.value.seq
 print(type(seq), seq)
+
+print(string.gsub("127.0.0.1:27017", ":", ","))

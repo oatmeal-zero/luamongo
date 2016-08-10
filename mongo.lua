@@ -45,18 +45,23 @@ local cursor_meta = {
     __index = mongo_cursor,
 }
 
+local function split(hostport)
+    local host, port = driver.split(hostport)
+    return host, port or 27017
+end
 ------------------------Making a Connection--------------------
 function mongo.client(conf)
+    assert(conf.host)
     local first = conf
+    local host, port = split(conf.host)
     local client = {
-        host = first.host,
-        port = first.port or 27017,
+        host = host,
+        port = port,
         username = first.username,
         password = first.password,
     }
     assert(client.host and client.port)
-    local uri = string.format("mongodb://%s:%d/", 
-            client.host, client.port)
+    local uri = string.format("mongodb://%s:%d/", host, port)
     client.__client = driver.new(uri)
     setmetatable(client, client_meta)
     return client
