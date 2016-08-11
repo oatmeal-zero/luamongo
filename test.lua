@@ -74,4 +74,9 @@ local doc = dbg.counters:findAndModify({query = {_id = "testid"},
         new = true})
 printtale(doc)
 
-print(string.gsub("127.0.0.1:27017", ":", ","))
+print("--------------------test objectId-----------------------------")
+local doc = dbt.testcoll:findOne()
+printtale(doc)
+print("--------------------test objectId-----------------------------")
+local doc = dbt.testcoll:findOne({_id = doc._id})
+printtale(doc)

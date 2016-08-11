@@ -136,7 +136,14 @@ _bson_as_table_visit_oid (const bson_iter_t *iter,
     char str[25];
     bson_oid_to_string (oid, str);
     _bson_as_table_push_key(key, data);
-    lua_pushstring(L, str);
+    //lua_pushstring(L, str);
+    luaL_Buffer b;
+    luaL_buffinit(L, &b);
+    luaL_addchar(&b, 0);
+    luaL_addchar(&b, BSON_TYPE_OID);
+    luaL_addstring(&b, str);
+    luaL_pushresult(&b);
+
     lua_rawset(L, -3);
     return false;
 }
@@ -303,32 +310,42 @@ _bson_append_val(bson_t *bson, lua_State *L, const char *key, int len) {
                     double val = lua_tonumber(L, -1);
                     bson_append_double(bson, key, len, val);
                 }
-            break;
+                break;
             }
         case LUA_TSTRING: 
             {
-            size_t sz;
-            const char* val = lua_tolstring(L, -1, &sz);
-            bson_append_utf8(bson, key, len, val, sz);
-            break;
+                size_t sz;
+                const char* val = lua_tolstring(L, -1, &sz);
+                if (sz > 1 && val[0] == 0) {
+                    bson_type_t t = val[1];
+                    if (t == BSON_TYPE_OID) {
+                        bson_oid_t oid;
+                        bson_oid_init_from_string(&oid, val+2);
+                        bson_append_oid(bson, key, len, &oid);
+                    }
+                } else {
+                    // normal string
+                    bson_append_utf8(bson, key, len, val, sz);
+                }
+                break;
             }
         case LUA_TBOOLEAN:
             {
-            int val = lua_toboolean(L, -1);
-            bson_append_bool(bson, key, len, val);
-            break;
+                int val = lua_toboolean(L, -1);
+                bson_append_bool(bson, key, len, val);
+                break;
             }
         case LUA_TTABLE:
             {
-            bool array = _table_is_pure_array(L, -1);
-            bson_t *val = _table_as_bson(L, -1, array);
-            if (array) {
-                bson_append_array(bson, key, len, val);
-            } else {
-                bson_append_document(bson, key, len, val);
-            }
-            bson_destroy(val);
-            break;
+                bool array = _table_is_pure_array(L, -1);
+                bson_t *val = _table_as_bson(L, -1, array);
+                if (array) {
+                    bson_append_array(bson, key, len, val);
+                } else {
+                    bson_append_document(bson, key, len, val);
+                }
+                bson_destroy(val);
+                break;
             }
         case LUA_TUSERDATA:
             {
