@@ -141,12 +141,14 @@ function mongo_collection:findAndModify(doc)
     local fields = doc.fields
     assert(query)
     assert(update or remove)
-    return driver.findAndModify(self.__collection, 
+    local ret = driver.findAndModify(self.__collection, 
             bson.encode(query), 
             sort and bson.encode(sort), 
             update and bson.encode(update), 
             fields and bson.encode(fields), 
             doc.remove, doc.upsert, doc.new)
+    assert(ret.ok == 1)
+    return ret.value
 end
 
 function mongo_cursor:hasNext()

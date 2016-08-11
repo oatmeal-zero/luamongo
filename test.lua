@@ -60,10 +60,11 @@ local doc = db.cheat:findOne({mapId= 1, playerId= 18254, })
 --printtale(doc)
 collectgarbage("collect")
 
-dbt.testcoll:insert({pkey=1111,double= 3.1415926, utf8= "你好", document={key1= 123, key2= "abc"},array={111,222,333},bool=false,bool2=true,int32=12345678, int64=34359738368,date_time=0,timestamp=0})
+dbt.testcoll:insert({pkey=2222,double= 3.1415926, utf8= "你好", document={key1= 123, key2= "abc"},array={111,222,333},bool=false,bool2=true,int32=12345678, int64=34359738368,date_time=0,timestamp=0})
+dbt.testcoll:delete({pkey=2222})
 print("-------------------------------------------------")
 local doc = dbt.testcoll:findOne({pkey = 1111})
---printtale(doc)
+printtale(doc)
 
 print("-------------------findAndModify----------------------")
 local dbg = client.global
@@ -71,8 +72,6 @@ local doc = dbg.counters:findAndModify({query = {_id = "testid"},
         update = {["$inc"] = {seq = 1}},
         upsert = true,
         new = true})
---printtale(doc)
-local seq = doc.value.seq
-print(type(seq), seq)
+printtale(doc)
 
 print(string.gsub("127.0.0.1:27017", ":", ","))
