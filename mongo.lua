@@ -178,6 +178,9 @@ function mongo_cursor:limit(amount)
     return self
 end
 
+--设置排序字段
+--@...  参数列表
+--e.g: "field", 1, "field2", -1
 function mongo_cursor:sort(...)
     self.__sortquery = bson.encode({["$query"] = self.__query, 
             ["$orderby"] = bson.encode_order(...)})
