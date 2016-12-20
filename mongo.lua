@@ -64,7 +64,7 @@ function mongo.client(conf)
     local protocol = "mongodb://"
     local userinfo = ""
     if client.username and client.password then
-        userinfo = string.format("%s:%s@", client.usernamei, client.password)
+        userinfo = string.format("%s:%s@", client.username, client.password)
     end
     local hostinfo = string.format("%s:%d/", host, port)
 
