@@ -59,16 +59,18 @@ function mongo.client(conf)
         port = port,
         username = first.username,
         password = first.password,
+        database = first.database,
     }
     assert(client.host and client.port)
-    local protocol = "mongodb://"
     local userinfo = ""
-    if client.username and client.password then
+    local database = ""
+    if client.username and client.password and client.database then
         userinfo = string.format("%s:%s@", client.username, client.password)
+        database = client.database
     end
-    local hostinfo = string.format("%s:%d/", host, port)
+    local hostinfo = string.format("%s:%d", host, port)
 
-    local uri = string.format("%s%s%s", protocol, userinfo, hostinfo)
+    local uri = string.format("mongodb://%s%s/%s", userinfo, hostinfo, database)
     client.__client = driver.new(uri)
     setmetatable(client, client_meta)
     return client
