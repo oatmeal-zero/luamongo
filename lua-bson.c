@@ -9,7 +9,7 @@
 
 typedef struct
 {
-    bool      array;
+    int      array;
     lua_State *L;
 } bson_lua_state_t;
 
@@ -44,8 +44,8 @@ _bson_as_table_push_key (const char *key, void * data)
 {
     bson_lua_state_t *state = data;
     lua_State *L = state->L;
-    if (state->array) {
-        lua_pushinteger(L, atoi(key)+1);
+    if (state->array > 0) {
+        lua_pushinteger(L, state->array++);
     } else {
         lua_pushstring(L, key);
     }
@@ -215,7 +215,7 @@ _bson_as_table_visit_document (const bson_iter_t *iter,
 {
     bson_lua_state_t *state = data;
     lua_State *L = state->L;
-    bson_lua_state_t child_state = { false, L };
+    bson_lua_state_t child_state = { 0, L };
     bson_iter_t child;
 
     if (bson_iter_init (&child, v_document)) {
@@ -236,7 +236,7 @@ _bson_as_table_visit_array (const bson_iter_t *iter,
 {
     bson_lua_state_t *state = data;
     lua_State *L = state->L;
-    bson_lua_state_t child_state = { true, L };
+    bson_lua_state_t child_state = { 1, L };
     bson_iter_t child;
 
     if (bson_iter_init (&child, v_array)) {
@@ -268,7 +268,7 @@ bson_as_table(lua_State *L, const bson_t *bson) {
         luaL_error(L, "(can't init bson iter)");
     }
 
-    bson_lua_state_t state = { false, L };
+    bson_lua_state_t state = { 0, L };
     if (bson_iter_visit_all (&iter, &bson_as_table_visitors, &state) ||
             iter.err_off) {
         luaL_error(L, "(can't convert bson to lua table)");
