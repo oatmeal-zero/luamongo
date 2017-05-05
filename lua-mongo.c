@@ -38,6 +38,9 @@ op_db(lua_State *L) {
     const char *name;
 
     client = lua_touserdata(L, 1);
+    if (client == NULL) {
+        luaL_error(L, "userdata expected, got nil value.");
+    }
     name = luaL_checkstring(L, 2);
     database = mongoc_client_get_database(client, name);
     lua_pushlightuserdata(L, database);
@@ -51,6 +54,9 @@ op_coll(lua_State *L) {
     const char *name;
 
     database = lua_touserdata(L, 1);
+    if (database == NULL) {
+        luaL_error(L, "userdata expected, got nil value.");
+    }
     name = luaL_checkstring(L, 2);
     collection = mongoc_database_get_collection(database, name);
     lua_pushlightuserdata(L, collection);
@@ -65,6 +71,9 @@ op_count(lua_State *L) {
     int64_t count;
 
     collection = lua_touserdata(L, 1);
+    if (collection == NULL) {
+        luaL_error(L, "userdata expected, got nil value.");
+    }
     doc = userdata_as_bson(L, 2);
 
     count = mongoc_collection_count (collection, MONGOC_QUERY_NONE, doc, 0, 0, NULL, &error);
@@ -83,6 +92,9 @@ op_insert(lua_State *L) {
     const bson_t *doc;
 
     collection = lua_touserdata(L, 1);
+    if (collection == NULL) {
+        luaL_error(L, "userdata expected, got nil value.");
+    }
     doc = userdata_as_bson(L, 2);
 
     if (!mongoc_collection_insert (collection, MONGOC_INSERT_NONE, doc, NULL, &error)) {
@@ -99,6 +111,9 @@ op_delete(lua_State *L) {
     const bson_t *doc;
 
     collection = lua_touserdata(L, 1);
+    if (collection == NULL) {
+        luaL_error(L, "userdata expected, got nil value.");
+    }
     doc = userdata_as_bson(L, 2);
 
     if (!mongoc_collection_remove (collection, MONGOC_REMOVE_NONE, doc, NULL, &error)) {
@@ -116,6 +131,9 @@ op_update(lua_State *L) {
     const bson_t *update;
 
     collection = lua_touserdata(L, 1);
+    if (collection == NULL) {
+        luaL_error(L, "userdata expected, got nil value.");
+    }
     query = userdata_as_bson(L, 2);
     update = userdata_as_bson(L, 3);
 
@@ -154,6 +172,9 @@ op_find(lua_State *L) {
     uint32_t limit;
 
     collection = lua_touserdata(L, 1);
+    if (collection == NULL) {
+        luaL_error(L, "userdata expected, got nil value.");
+    }
     query = userdata_as_bson(L, 2);
 
     skip = luaL_checkinteger (L, 3);
@@ -199,6 +220,9 @@ op_find_and_modify(lua_State *L) {
     const char* json;
 
     collection = lua_touserdata(L, 1);
+    if (collection == NULL) {
+        luaL_error(L, "userdata expected, got nil value.");
+    }
     query = userdata_as_bson(L, 2);
     // optional
     sort = userdata_as_bson(L, 3);
